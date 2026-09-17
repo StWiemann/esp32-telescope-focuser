@@ -9,6 +9,11 @@ The focuser is fully controllable from **N.I.N.A.** (Windows) and
 via three physical buttons and a small web dashboard.
 
 ---
+## Upcoming
+
+I will add pictures and Links to the STLs when I finished my little project.
+
+---
 
 ## Features
 
