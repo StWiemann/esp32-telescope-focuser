@@ -389,7 +389,7 @@ esp32-focusser/
 
 ## Attribution & Credits
 
-This project was designed and vibe-coded by  for personal use
+This project was designed and vibe-coded by **StWiemann** for personal use
 with a Sky-Watcher P200/200P Newton telescope.
 
 The firmware is built on top of:
