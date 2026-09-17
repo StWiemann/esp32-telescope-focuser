@@ -67,7 +67,7 @@ void WebServer::_registerRoutes(AsyncWebServer* server) {
                     return;
                 }
                 int32_t pos = json["position"].as<int32_t>();
-                if (pos < 0 || pos > _focuser->getMaxPosition()) {
+                if (pos < _focuser->getMinPosition() || pos > _focuser->getMaxPosition()) {
                     req->send(400, "application/json",
                               "{\"ok\":false,\"error\":\"Position out of range\"}");
                     return;
@@ -136,6 +136,10 @@ void WebServer::_registerRoutes(AsyncWebServer* server) {
                     _prefs->setManualSpeed(obj["manualSpeed"].as<float>());
                 if (obj["motorMaxSpeed"].is<float>())
                     _prefs->setMotorMaxSpeed(obj["motorMaxSpeed"].as<float>());
+                if (obj["wifiTxPower"].is<int>()) {
+                    _prefs->setWifiTxPower(obj["wifiTxPower"].as<int>());
+                    _wifi->applyTxPower();
+                }
 
                 _focuser->applyConfig();
 
@@ -169,6 +173,7 @@ String WebServer::_buildStatusJson() const {
     doc["isMoving"]     = _focuser->isMoving();
     doc["isZeroed"]     = _focuser->isZeroed();
     doc["maxPosition"]  = _focuser->getMaxPosition();
+    doc["minPosition"]  = _focuser->getMinPosition();
     doc["firmware"]     = FIRMWARE_VERSION;
 
     float t = _tempSensor->getTemperatureCelsius();
@@ -212,6 +217,7 @@ String WebServer::_buildConfigJson() const {
     doc["stepLarge"]          = _prefs->getStepLarge();
     doc["manualSpeed"]        = _prefs->getManualSpeed();
     doc["motorMaxSpeed"]      = _prefs->getMotorMaxSpeed();
+    doc["wifiTxPower"]        = _prefs->getWifiTxPower();
 
     String out;
     serializeJson(doc, out);

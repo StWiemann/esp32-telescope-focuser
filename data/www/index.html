@@ -147,6 +147,24 @@
   </div>
 
   <div class="card">
+    <h2>Transmit power</h2>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem">
+      8.5&nbsp;dBm is a <strong>reduction</strong> from the chip default (19.5&nbsp;dBm),
+      not a boost. It can help if the ESP32 sits next to the Fritzbox and overloads
+      the receiver. At RSSI around −55 it may make the uplink worse — try 15&nbsp;dBm first.
+    </p>
+    <label for="cfgTxPower">WiFi TX power</label>
+    <select id="cfgTxPower">
+      <option value="78">19.5 dBm (default)</option>
+      <option value="68">17 dBm</option>
+      <option value="60">15 dBm</option>
+      <option value="44">11 dBm</option>
+      <option value="34">8.5 dBm</option>
+    </select>
+    <button class="primary" style="margin-top:1rem;width:100%" onclick="saveTxPower()">Apply TX power</button>
+  </div>
+
+  <div class="card">
     <h2>Firmware</h2>
     <div class="row"><span class="label">Version</span><span class="value" id="netFw">-</span></div>
     <a class="btn-link" href="/update" target="_blank">Open OTA update page &#8599;</a>

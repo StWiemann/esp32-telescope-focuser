@@ -45,6 +45,8 @@ public:
     uint8_t getLastDisconnectReason() const { return _lastDisconnectReason; }
     const char* getLastDisconnectReasonName() const;
 
+    void applyTxPower();
+
     // Called by CaptivePortal after credentials are saved
     void onCredentialsSaved();
 
@@ -58,6 +60,7 @@ private:
     int      _reconnectAttempts = 0;   // 0 = first connect attempt this boot
     uint32_t _rebootAt          = 0;   // millis() deadline, 0 = none
     uint8_t  _lastDisconnectReason = 0;
+    bool     _quickReconnect      = false;
 
     CaptivePortal* _portal = nullptr;
 

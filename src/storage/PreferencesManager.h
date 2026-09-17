@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <Preferences.h>
+#include "Config.h"
 
 /**
  * PreferencesManager – typed NVS (non-volatile storage) access.
@@ -25,6 +26,10 @@ public:
     void setWifiCredentials(const String& ssid, const String& pass);
     bool hasWifiCredentials() const { return _wifiSsid.length() > 0; }
     void clearWifiCredentials();
+
+    // Arduino wifi_power_t value (78 = 19.5 dBm, 34 = 8.5 dBm, …)
+    int getWifiTxPower() const { return _wifiTxPower; }
+    void setWifiTxPower(int v);
 
     // ── Network identity ──────────────────────────────────────────────────
     const String& getHostname()     const { return _hostname; }
@@ -97,6 +102,7 @@ private:
     int32_t _stepLarge          = 0;
     float   _manualSpeed        = 0.0f;
     float   _motorMaxSpeed      = 0.0f;
+    int     _wifiTxPower        = DEFAULT_WIFI_TX_POWER;
 
     void _load();
 };

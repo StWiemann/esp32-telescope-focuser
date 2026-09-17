@@ -65,20 +65,12 @@ void DisplayManager::_draw(const FocuserController& focuser, bool wifiOk, bool a
 
     // ── Row 1 (y=19): Position ────────────────────────────────────────────
     u8g2.drawStr(0, 19, "Pos:");
-    if (focuser.isZeroed()) {
-        snprintf(buf, sizeof(buf), "%-8ld", (long)focuser.getCurrentPosition());
-    } else {
-        snprintf(buf, sizeof(buf), "----    ");
-    }
+    snprintf(buf, sizeof(buf), "%-8ld", (long)focuser.getCurrentPosition());
     u8g2.drawStr(26, 19, buf);
 
     // ── Row 2 (y=29): Target ──────────────────────────────────────────────
     u8g2.drawStr(0, 29, "Tgt:");
-    if (focuser.isZeroed()) {
-        snprintf(buf, sizeof(buf), "%-8ld", (long)focuser.getTargetPosition());
-    } else {
-        snprintf(buf, sizeof(buf), "----    ");
-    }
+    snprintf(buf, sizeof(buf), "%-8ld", (long)focuser.getTargetPosition());
     u8g2.drawStr(26, 29, buf);
 
     // ── Row 3 (y=39): Status / movement indicator ─────────────────────────

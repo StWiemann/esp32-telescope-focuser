@@ -51,8 +51,8 @@ void FocuserController::_executeCommand(const FocuserCommand& cmd) {
 
 void FocuserController::_doMoveAbsolute(int32_t absolutePos) {
     if (!_isInRange(absolutePos)) {
-        LOG_ERROR("Move rejected: position %d out of range [0, %d]",
-                  absolutePos, _maxPosition);
+        LOG_ERROR("Move rejected: position %d out of range [%d, %d]",
+                  absolutePos, _minPosition(), _maxPosition);
         return;
     }
 
@@ -64,7 +64,7 @@ void FocuserController::_doMoveAbsolute(int32_t absolutePos) {
         absolutePos,
         _prefs.getBacklashSteps(),
         _prefs.getBacklashApproachDir(),
-        0,
+        _minPosition(),
         _maxPosition
     );
 
@@ -107,7 +107,7 @@ void FocuserController::_doZero() {
 
 void FocuserController::_doStartContinuous(int8_t dir) {
     // For continuous movement, move to max or min depending on direction
-    int32_t target = (dir > 0) ? _maxPosition : 0;
+    int32_t target = (dir > 0) ? _maxPosition : _minPosition();
     _stepper.setTarget(target);
     _targetPosition = target;
     LOG_DEBUG("Continuous move dir=%d, target=%d", dir, target);
@@ -122,7 +122,7 @@ void FocuserController::moveAbsolute(int32_t absolutePos) {
 
 void FocuserController::moveRelative(int32_t delta) {
     int32_t newTarget = getCurrentPosition() + delta;
-    newTarget = constrain(newTarget, 0, _maxPosition);
+    newTarget = constrain(newTarget, _minPosition(), _maxPosition);
     moveAbsolute(newTarget);
 }
 

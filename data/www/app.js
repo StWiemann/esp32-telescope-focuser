@@ -69,10 +69,15 @@ function updateStatus() {
     .then(r => r.json())
     .then(d => {
       const pos = document.getElementById('pos');
-      pos.textContent = d.isZeroed ? d.position : '----';
+      pos.textContent = d.position;
 
-      document.getElementById('tgt-line').textContent =
-        'Target: ' + (d.isZeroed ? d.target : '----');
+      document.getElementById('tgt-line').textContent = 'Target: ' + d.target;
+
+      const moveIn = document.getElementById('moveTarget');
+      if (moveIn && d.minPosition !== undefined) {
+        moveIn.min = d.minPosition;
+        moveIn.max = d.maxPosition;
+      }
 
       const badge = document.getElementById('moving-badge');
       if (d.isMoving) {
@@ -180,6 +185,9 @@ function loadConfig() {
     .then(r => r.json())
     .then(cfg => {
       document.getElementById('cfgHostname').value    = cfg.hostname       || '';
+      if (cfg.wifiTxPower !== undefined) {
+        document.getElementById('cfgTxPower').value = String(cfg.wifiTxPower);
+      }
       document.getElementById('cfgName').value        = cfg.focuserName    || '';
       document.getElementById('cfgMaxPos').value      = cfg.maxPosition    || 0;
       document.getElementById('cfgBacklash').value    = cfg.backlashSteps  || 0;
@@ -246,6 +254,16 @@ function saveConfig() {
       } else {
         toast('Error: ' + d.error);
       }
+    })
+    .catch(() => toast('Request failed'));
+}
+
+function saveTxPower() {
+  const wifiTxPower = parseInt(document.getElementById('cfgTxPower').value, 10);
+  post('/api/config', { wifiTxPower })
+    .then(d => {
+      if (d.ok) toast('TX power applied');
+      else      toast('Error: ' + d.error);
     })
     .catch(() => toast('Request failed'));
 }

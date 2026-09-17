@@ -83,7 +83,12 @@
 // ── WiFi ─────────────────────────────────────────────────────────────────────
 #define WIFI_CONNECT_TIMEOUT_MS   20000    // ms; give up station attempt after this
 #define WIFI_RECONNECT_INTERVAL_MS 30000   // ms; retry station connection every 30 s
+#define WIFI_AUTH_RETRY_MS          2000   // ms; faster begin() after AUTH_EXPIRE etc.
 #define CAPTIVE_DNS_TTL_MS           60    // TTL for captive DNS responses (seconds)
+
+// Arduino wifi_power_t units (quarter-dBm). 78 = 19.5 dBm (chip default).
+// 8.5 dBm (34) is a reduction, not a boost — see Network tab.
+#define DEFAULT_WIFI_TX_POWER        78
 
 // In-RAM ring for the web Debug tab. ~80–120 typical lines. Static, not heap.
 #define LOG_RING_SIZE               6144

@@ -35,10 +35,15 @@ void WiFiManager::loop() {
                     WiFi.disconnect(true);
                     _startAP();
                 }
-            } else if (now - _actionSince >= WIFI_RECONNECT_INTERVAL_MS) {
-                // Auto-reconnect did not restore the link – one explicit begin() kick.
-                LOG_WARN("WiFi auto-reconnect timed out – calling begin() again");
-                _startStation();
+            } else {
+                const uint32_t waitMs = _quickReconnect
+                    ? WIFI_AUTH_RETRY_MS
+                    : WIFI_RECONNECT_INTERVAL_MS;
+                if (now - _actionSince >= waitMs) {
+                    LOG_WARN("WiFi reconnect timed out – calling begin() again");
+                    _quickReconnect = false;
+                    _startStation();
+                }
             }
             break;
 
@@ -66,8 +71,10 @@ void WiFiManager::_startStation() {
     WiFi.setAutoReconnect(true);
     WiFi.persistent(false);
     WiFi.begin(_prefs.getWifiSsid().c_str(), _prefs.getWifiPass().c_str());
-    LOG_INFO("Connecting to SSID '%s' … (attempt %d)",
-             _prefs.getWifiSsid().c_str(), _reconnectAttempts + 1);
+    applyTxPower();
+    LOG_INFO("Connecting to SSID '%s' … (attempt %d, tx=%d)",
+             _prefs.getWifiSsid().c_str(), _reconnectAttempts + 1,
+             _prefs.getWifiTxPower());
 }
 
 void WiFiManager::_startAP() {
@@ -102,7 +109,9 @@ void WiFiManager::_startAP() {
 
 void WiFiManager::_onConnected() {
     _reconnectAttempts = 0;
+    _quickReconnect    = false;
     _state = State::CONNECTED;
+    applyTxPower();
 
     if (_portal) {
         _portal->stop();
@@ -125,9 +134,18 @@ void WiFiManager::_onDisconnected(uint8_t reason) {
         _reconnectAttempts++;
         _state       = State::CONNECTING;
         _actionSince = millis();
-        // Do not call WiFi.begin() here. setAutoReconnect(true) already retries;
-        // a second begin() races the supplicant and makes the link look flaky.
+        // AUTH_EXPIRE / handshake failures leave a dead session; auto-reconnect
+        // often sits idle. Kick begin() after a short wait instead of 30 s.
+        _quickReconnect = (reason == 2 || reason == 15 || reason == 202
+                           || reason == 204 || reason == 205);
     }
+}
+
+void WiFiManager::applyTxPower() {
+    wifi_power_t pwr = (wifi_power_t)_prefs.getWifiTxPower();
+    WiFi.setTxPower(pwr);
+    LOG_INFO("WiFi TX power set to enum %d (%.1f dBm)",
+             (int)pwr, (int)pwr / 4.0f);
 }
 
 const char* WiFiManager::_reasonName(uint8_t reason) {
@@ -155,8 +173,14 @@ const char* WiFiManager::getLastDisconnectReasonName() const {
 void WiFiManager::_wifiEventHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
     if (!_instance) return;
     switch (event) {
+        case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+            LOG_INFO("WiFi associated with AP (waiting for IP)");
+            break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             _instance->_onConnected();
+            break;
+        case ARDUINO_EVENT_WIFI_STA_LOST_IP:
+            LOG_WARN("WiFi lost IP address (association may still be up)");
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             _instance->_onDisconnected(info.wifi_sta_disconnected.reason);

@@ -65,6 +65,8 @@ public:
     bool    isMoving()           const { return _stepper.isMoving(); }
     bool    isZeroed()           const { return _zeroed; }
     int32_t getMaxPosition()     const { return _maxPosition; }
+    // 0 once zeroed; −maxPosition before zero so the focuser can retract to the stop.
+    int32_t getMinPosition()     const { return _minPosition(); }
     int32_t getManualStepSize()  const { return _prefs.getManualStepSize(); }
     float   getManualSpeed()     const { return _prefs.getManualSpeed(); }
 
@@ -91,7 +93,9 @@ private:
     void _doZero();
     void _doStartContinuous(int8_t dir);
 
+    int32_t _minPosition() const { return _zeroed ? 0 : -_maxPosition; }
+
     bool _isInRange(int32_t pos) const {
-        return pos >= 0 && pos <= _maxPosition;
+        return pos >= _minPosition() && pos <= _maxPosition;
     }
 };

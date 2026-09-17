@@ -30,6 +30,7 @@ void PreferencesManager::_load() {
     _stepLarge           = _prefs.getInt   ("stepLg",      DEFAULT_STEP_LARGE);
     _manualSpeed         = _prefs.getFloat ("manualSpeed", DEFAULT_MANUAL_SPEED);
     _motorMaxSpeed       = _prefs.getFloat ("maxSpeed",    DEFAULT_MOTOR_MAX_SPEED);
+    _wifiTxPower         = _prefs.getInt   ("wifiTx",      DEFAULT_WIFI_TX_POWER);
 
     _prefs.end();
 }
@@ -53,6 +54,7 @@ void PreferencesManager::save() {
     _prefs.putInt   ("stepLg",     _stepLarge);
     _prefs.putFloat ("manualSpeed",_manualSpeed);
     _prefs.putFloat ("maxSpeed",   _motorMaxSpeed);
+    _prefs.putInt   ("wifiTx",     _wifiTxPower);
 
     _prefs.end();
     LOG_INFO("Preferences saved");
@@ -159,6 +161,10 @@ void PreferencesManager::setManualSpeed(float v) {
 
 void PreferencesManager::setMotorMaxSpeed(float v) {
     SETTER(_motorMaxSpeed, "maxSpeed", float, putFloat);
+}
+
+void PreferencesManager::setWifiTxPower(int v) {
+    SETTER(_wifiTxPower, "wifiTx", int, putInt);
 }
 
 #undef SETTER

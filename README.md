@@ -199,14 +199,17 @@ network discovery (mDNS, Alpaca UDP).
 
 ## Zeroing the Position
 
-The firmware has no homing sensor. Before each session:
+The firmware has no homing sensor. After a power cycle the counter starts at 0
+but is **unzeroed**: you can still jog **inward past 0** (down to −maxPosition)
+with the **−** button or the web UI so you can find the mechanical stop without
+turning the focuser by hand.
 
-1. Press and hold **−** until the focuser is fully retracted (at mechanical stop).
-2. Hold **ZERO** for 2 seconds → position is set to 0.
-3. OLED shows `STATUS: READY`.
+1. Press and hold **−** until the focuser is fully retracted.
+2. Hold **ZERO** for 2 seconds → that position becomes 0.
+3. OLED shows `STATUS: READY`. Further inward moves then stop at 0.
 
-NINA and Ekos will now read a meaningful absolute position. If you skip this
-step the position counter starts at an arbitrary offset.
+NINA / Ekos (Alpaca) always use the absolute range 0…MaxStep and should be used
+after zeroing.
 
 ---
 

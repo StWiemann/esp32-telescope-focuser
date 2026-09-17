@@ -26,6 +26,7 @@ WiFi: OK   Alp: OK
 Before using with NINA, establish the position reference:
 
 1. Use the **−** button to drive the focuser completely inward (to mechanical stop).
+   Before zeroing, inward travel is allowed below 0 so you do not need to crank by hand.
 2. Hold the **ZERO** button for 2 seconds.
 3. OLED shows `STATUS: READY` and `Pos: 0`.
 
