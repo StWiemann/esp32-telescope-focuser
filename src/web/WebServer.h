@@ -17,8 +17,11 @@
  *  POST /api/zero   → set zero
  *  POST /api/move   → { "position": <int> }   absolute move
  *  POST /api/moveby → { "delta": <int> }       relative move
- *  GET  /api/config → JSON of current config
- *  POST /api/config → update config fields (JSON body)
+ *  GET  /api/config     → JSON of current config
+ *  POST /api/config     → update config fields (JSON body)
+ *  POST /api/wifi/clear → wipe WiFi credentials and reboot into AP mode
+ *  GET  /api/log        → recent Serial-equivalent log (text/plain ring buffer)
+ *  POST /api/log/clear  → empty the RAM log ring
  *
  * All POST endpoints accept application/json.
  * The AsyncWebServer used here is the one owned by AlpacaServer so that all

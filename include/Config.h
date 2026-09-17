@@ -85,6 +85,9 @@
 #define WIFI_RECONNECT_INTERVAL_MS 30000   // ms; retry station connection every 30 s
 #define CAPTIVE_DNS_TTL_MS           60    // TTL for captive DNS responses (seconds)
 
+// In-RAM ring for the web Debug tab. ~80–120 typical lines. Static, not heap.
+#define LOG_RING_SIZE               6144
+
 // ── Stepper FreeRTOS task ─────────────────────────────────────────────────────
 #define STEPPER_TASK_STACK_SIZE   2048     // words (8 KB)
 #define STEPPER_TASK_PRIORITY        2     // higher than Arduino loop (1)

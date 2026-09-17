@@ -1,20 +1,30 @@
-#include "TemperatureSensor.h"
+#include "sensors/TemperatureSensor.h"
 #include "util/Log.h"
-#include <cmath>
 
 void TemperatureSensor::begin() {
-    _sensors.begin();
-    int count = _sensors.getDeviceCount();
-    _available = (count > 0);
+    // Scan the bus for the first supported DS thermometer.
+    // search() returns EC_SUCCESS for every device found, then EC_NO_DEVS.
+    OneWireNg::Id id;
+    _ow.searchReset();
 
-    if (_available) {
-        // Use 12-bit resolution (0.0625 °C precision); conversion takes ≤750 ms.
-        _sensors.setResolution(12);
-        // Do not wait for conversion in-line; we drive the bus asynchronously.
-        _sensors.setWaitForConversion(false);
-        LOG_INFO("DS18B20 found (%d device(s)) on GPIO %d", count, PIN_TEMP_DATA);
-    } else {
-        LOG_WARN("No DS18B20 found on GPIO %d (check wiring / pull-up)", PIN_TEMP_DATA);
+    while (_ow.search(id) == OneWireNg::EC_SUCCESS) {
+        // getFamilyName() returns a non-null string for any supported DS sensor
+        if (DSTherm::getFamilyName(id) != nullptr) {
+            memcpy(_addr, id, sizeof(OneWireNg::Id));
+            _available = true;
+
+            // Set 12-bit resolution (750 ms conversion time, 0.0625 °C steps).
+            // Th/Tl alarm thresholds are unused, set to 0.
+            _drv.writeScratchpad(_addr, 0, 0, DSTherm::RES_12_BIT);
+
+            LOG_INFO("TemperatureSensor: %s found (family 0x%02X)",
+                     DSTherm::getFamilyName(id), id[0]);
+            break;
+        }
+    }
+
+    if (!_available) {
+        LOG_INFO("TemperatureSensor: no DS thermometer found – disabled");
     }
 }
 
@@ -24,27 +34,31 @@ void TemperatureSensor::loop() {
     uint32_t now = millis();
 
     if (!_requestPending) {
-        // Time to start a new conversion
         if (now - _lastRequestMs >= TEMP_POLL_MS) {
-            _sensors.requestTemperaturesByIndex(0);
+            // convTime=0: send conversion command and return immediately (non-blocking)
+            _drv.convertTemp(_addr, 0, false);
             _lastRequestMs  = now;
             _requestPending = true;
         }
         return;
     }
 
-    // Wait for the conversion to complete before reading
+    // Wait until the conversion is complete before reading
     if (now - _lastRequestMs < TEMP_CONVERSION_MS) return;
 
     _requestPending = false;
-    float t = _sensors.getTempCByIndex(0);
 
-    if (t == DEVICE_DISCONNECTED_C || t == 85.0f) {
-        // 85 °C is the power-on default and indicates a bad read
-        LOG_WARN("TemperatureSensor: bad reading (%.1f °C) – ignored", t);
-        return;
+    // readScratchpad() constructs a Scratchpad in-place inside the Placeholder
+    if (_drv.readScratchpad(_addr, _scratchpad) == OneWireNg::EC_SUCCESS) {
+        const DSTherm::Scratchpad& sp =
+            static_cast<DSTherm::Scratchpad&>(_scratchpad);
+
+        // getTemp() returns milli-degrees Celsius (e.g. 20125 = 20.125 °C)
+        float t = sp.getTemp() / 1000.0f;
+
+        // 85.0 °C is the power-on reset value – discard it
+        if (t != 85.0f) {
+            _temperature = t;
+        }
     }
-
-    _temperature = t;
-    LOG_DEBUG("Temperature: %.2f °C", _temperature);
 }

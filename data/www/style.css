@@ -26,8 +26,19 @@ h1 { font-size: 1.25rem; color: var(--accent); margin-bottom: 1rem }
 h2 { font-size: 1rem; color: var(--muted); margin-bottom: .75rem;
      text-transform: uppercase; letter-spacing: .08em }
 
+.tabs { display:flex; gap:.35rem; margin-bottom:1rem; flex-wrap:wrap }
+.tab {
+  background:transparent; color:var(--muted); border:1px solid var(--border);
+  padding:.45rem 1rem; border-radius:6px; font-weight:600
+}
+.tab:hover { background:var(--surface); color:var(--text) }
+.tab.active { background:var(--accent); color:#000; border-color:var(--accent) }
+.tab-panel { display:none }
+.tab-panel.active { display:block }
+
 .grid { display: grid; gap: 1rem;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) }
+.grid-single { grid-template-columns: minmax(0, 520px) }
 
 .card {
   background: var(--surface);
@@ -69,11 +80,17 @@ button.danger:hover  { opacity:.85 }
 
 /* Form */
 label { display:block; color:var(--muted); font-size:.8rem; margin:.6rem 0 .2rem }
-input[type=text],input[type=number],input[type=password] {
+input[type=text],input[type=number],input[type=password],select {
   width:100%; padding:.4rem .6rem; background:var(--bg); border:1px solid var(--border);
   border-radius:6px; color:var(--text); font-size:.9rem
 }
-input:focus { outline:none; border-color:var(--accent) }
+input:focus,select:focus { outline:none; border-color:var(--accent) }
+
+.btn-link {
+  display:inline-block; margin-top:.75rem; color:var(--accent);
+  text-decoration:none; font-size:.9rem
+}
+.btn-link:hover { text-decoration:underline }
 
 .badge {
   display:inline-block; padding:.1rem .45rem; border-radius:4px;
@@ -93,3 +110,11 @@ input:focus { outline:none; border-color:var(--accent) }
   opacity:0; transition:opacity .3s; pointer-events:none
 }
 #toast.show { opacity:1 }
+
+.log-view {
+  margin-top:.75rem; padding:.75rem;
+  background:#0d1117; border:1px solid var(--border); border-radius:6px;
+  font-family: ui-monospace, Consolas, monospace; font-size:.75rem;
+  line-height:1.45; white-space:pre-wrap; word-break:break-all;
+  max-height:70vh; overflow:auto; color:#c9d1d9
+}

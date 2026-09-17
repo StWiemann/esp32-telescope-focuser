@@ -63,6 +63,8 @@ void setup() {
     Serial.begin(115200);
     delay(200);  // allow USB serial to enumerate
 
+    logBufferBegin();
+
     // SLog is provided by ESP32AlpacaDevices2; output to Serial at DEBUG level
     g_Slog.Begin(Serial, 115200);
     g_Slog.SetLvlMsk(SLOG_DEBUG);

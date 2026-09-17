@@ -9,9 +9,17 @@
 <body>
 <h1>&#9654; ESP32 Astro Focuser</h1>
 
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="control" role="tab">Control</button>
+  <button class="tab" data-tab="config" role="tab">Configuration</button>
+  <button class="tab" data-tab="network" role="tab">Network</button>
+  <button class="tab" data-tab="debug" role="tab">Debug</button>
+</nav>
+
+<!-- ── Control ──────────────────────────────────────────────────────────── -->
+<section id="tab-control" class="tab-panel active">
 <div class="grid">
 
-  <!-- Status Card -->
   <div class="card">
     <h2>Status</h2>
     <div class="pos-display" id="pos">----</div>
@@ -25,11 +33,10 @@
       <div class="row"><span class="label">WiFi</span><span class="value" id="wifiStatus">-</span></div>
       <div class="row"><span class="label">IP</span><span class="value" id="ip">-</span></div>
       <div class="row"><span class="label">RSSI</span><span class="value" id="rssi">-</span></div>
-      <div class="row"><span class="label">Firmware</span><span class="value" id="fw">-</span></div>
+      <div class="row"><span class="label">Firmware</span><span class="value"><span id="fw">-</span> &nbsp;<a href="/update" target="_blank" style="font-size:.75rem;color:var(--accent)">OTA Update &#8599;</a></span></div>
     </div>
   </div>
 
-  <!-- Control Card -->
   <div class="card">
     <h2>Manual Control</h2>
     <div class="ctrl-row">
@@ -61,9 +68,14 @@
     </div>
   </div>
 
-  <!-- Config Card -->
+</div>
+</section>
+
+<!-- ── Configuration ────────────────────────────────────────────────────── -->
+<section id="tab-config" class="tab-panel">
+<div class="grid grid-single">
   <div class="card" id="configCard">
-    <h2>Configuration <span id="configSaved" style="color:var(--ok);font-size:.8rem;display:none">&#10003; Saved</span></h2>
+    <h2>Focuser <span id="configSaved" style="color:var(--ok);font-size:.8rem;display:none">&#10003; Saved</span></h2>
     <label>Focuser name</label>
     <input type="text" id="cfgName" placeholder="ESP32 Focuser">
     <label>Max position (steps)</label>
@@ -103,8 +115,74 @@
     <div id="ratioDisplay" style="color:var(--muted);font-size:.8rem;margin-top:.4rem"></div>
     <button class="primary" style="margin-top:1rem;width:100%" onclick="saveConfig()">Save Configuration</button>
   </div>
+</div>
+</section>
+
+<!-- ── Network ──────────────────────────────────────────────────────────── -->
+<section id="tab-network" class="tab-panel">
+<div class="grid">
+
+  <div class="card">
+    <h2>WiFi Status</h2>
+    <div class="row"><span class="label">Link</span><span class="value" id="netLink">-</span></div>
+    <div class="row"><span class="label">SSID</span><span class="value" id="netSsid">-</span></div>
+    <div class="row"><span class="label">BSSID (access point)</span><span class="value" id="netBssid">-</span></div>
+    <div class="row"><span class="label">IP</span><span class="value" id="netIp">-</span></div>
+    <div class="row"><span class="label">RSSI</span><span class="value" id="netRssi">-</span></div>
+    <div class="row"><span class="label">Last disconnect</span><span class="value" id="netReason">-</span></div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:.6rem">
+      BSSID is the MAC of the access point you are actually associated with.
+      On a mesh (Fritzbox + repeater) this tells you which node won, not the SSID name.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Hostname</h2>
+    <label for="cfgHostname">mDNS hostname (without .local)</label>
+    <input type="text" id="cfgHostname" placeholder="esp32-focuser">
+    <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+      Applied on the next reboot. Then open <code>http://&lt;hostname&gt;.local/</code>
+    </div>
+    <button class="primary" style="margin-top:1rem;width:100%" onclick="saveHostname()">Save Hostname</button>
+  </div>
+
+  <div class="card">
+    <h2>Firmware</h2>
+    <div class="row"><span class="label">Version</span><span class="value" id="netFw">-</span></div>
+    <a class="btn-link" href="/update" target="_blank">Open OTA update page &#8599;</a>
+  </div>
+
+  <div class="card">
+    <h2>Change WiFi</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">
+      Clears the stored network and reboots into setup mode.
+      Join <code>ESP32-Focuser-XXXX</code> (password <code>focuser1</code>)
+      and open <code>http://192.168.4.1/</code> to pick a new network.
+    </p>
+    <button class="danger" style="width:100%" onclick="clearWifi()">Clear WiFi &amp; reboot into setup</button>
+  </div>
 
 </div>
+</section>
+
+<!-- ── Debug ────────────────────────────────────────────────────────────── -->
+<section id="tab-debug" class="tab-panel">
+  <div class="card">
+    <h2>Serial log</h2>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem">
+      Same <code>LOG_*</code> lines as USB Serial, kept in a 6&nbsp;KB RAM ring
+      (oldest dropped). Cleared on reboot. Polled only while this tab is open.
+    </p>
+    <div class="row"><span class="label">Buffer</span><span class="value" id="logMeta">-</span></div>
+    <div class="row"><span class="label">Free heap</span><span class="value" id="logHeap">-</span></div>
+    <div class="ctrl-row" style="margin-top:.75rem">
+      <button class="primary" id="btnLogPause" onclick="toggleLogPause()">Pause</button>
+      <button onclick="copyLog()">Copy</button>
+      <button class="danger" onclick="clearLog()">Clear</button>
+    </div>
+    <pre id="logView" class="log-view">Connecting…</pre>
+  </div>
+</section>
 
 <div id="toast"></div>
 

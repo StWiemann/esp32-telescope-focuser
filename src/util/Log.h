@@ -3,9 +3,8 @@
 /**
  * Log.h – Thin wrapper around SLog (provided by ESP32AlpacaDevices2 dependency).
  *
- * SLog outputs to Serial and optionally to a syslog server.  We expose
- * simple macros so the rest of the code never calls SLOG_PRINTF directly,
- * giving us a single place to change the logging backend if needed.
+ * Each line is written to Serial (via SLog) and to a small RAM ring
+ * (LogBuffer) so the web Debug tab can show the same history without USB.
  *
  * Usage:
  *   LOG_INFO("WiFi connected: %s", ip.c_str());
@@ -15,9 +14,21 @@
  */
 
 #include <SLog.h>
+#include "util/LogBuffer.h"
 
-// Severity-tagged macros matching the log output format expected in the spec
-#define LOG_INFO(fmt, ...)   SLOG_PRINTF(SLOG_INFO,    "[INFO]  " fmt "\n", ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...)   SLOG_PRINTF(SLOG_WARNING, "[WARN]  " fmt "\n", ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...)  SLOG_PRINTF(SLOG_ERROR,   "[ERROR] " fmt "\n", ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...)  SLOG_PRINTF(SLOG_DEBUG,   "[DEBUG] " fmt "\n", ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)  do { \
+        logCapture("INFO",  fmt, ##__VA_ARGS__); \
+        SLOG_PRINTF(SLOG_INFO,    "[INFO]  " fmt "\n", ##__VA_ARGS__); \
+    } while (0)
+#define LOG_WARN(fmt, ...)  do { \
+        logCapture("WARN",  fmt, ##__VA_ARGS__); \
+        SLOG_PRINTF(SLOG_WARNING, "[WARN]  " fmt "\n", ##__VA_ARGS__); \
+    } while (0)
+#define LOG_ERROR(fmt, ...) do { \
+        logCapture("ERROR", fmt, ##__VA_ARGS__); \
+        SLOG_PRINTF(SLOG_ERROR,   "[ERROR] " fmt "\n", ##__VA_ARGS__); \
+    } while (0)
+#define LOG_DEBUG(fmt, ...) do { \
+        logCapture("DEBUG", fmt, ##__VA_ARGS__); \
+        SLOG_PRINTF(SLOG_DEBUG,   "[DEBUG] " fmt "\n", ##__VA_ARGS__); \
+    } while (0)

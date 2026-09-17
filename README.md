@@ -27,7 +27,7 @@ I will add pictures and Links to the STLs when I finished my little project.
 - **Backlash compensation** – configurable overshoot + return on direction reversal
 - **WiFi** – station mode with automatic captive-portal fallback for first-time setup
 - **mDNS** – reachable at `http://esp32-focuser.local/` without knowing the IP
-- **Web UI** – live status, manual step controls, full configuration page
+- **Web UI** – Control / Configuration / Network / Debug tabs (Serial-equivalent log in RAM)
 - **OLED display** – real-time position, WiFi status, Alpaca connection state
 - **3 physical buttons** – `−`, `ZERO`, `+` with short press / hold / long-press semantics
 - **Non-blocking** – FreeRTOS stepper task on Core 1; network never stalls the motor
@@ -190,8 +190,10 @@ device is on WiFi.
 3. Open `http://192.168.4.1/` and enter your home network credentials.
 4. The device restarts and connects. The OLED shows the assigned IP.
 
-See [docs/WIFI_SETUP.md](docs/WIFI_SETUP.md) for changing credentials later and
-for network discovery (mDNS, Alpaca UDP).
+To change network later: web UI → **Network** → **Clear WiFi & reboot into setup**.
+
+See [docs/WIFI_SETUP.md](docs/WIFI_SETUP.md) for mesh/BSSID notes and
+network discovery (mDNS, Alpaca UDP).
 
 ---
 
@@ -357,8 +359,7 @@ See [docs/CALIBRATION.md](docs/CALIBRATION.md).
 | [ArduinoJson](https://arduinojson.org/) by **Benoît Blanchon** | MIT | JSON serialisation |
 | [U8g2](https://github.com/olikraus/u8g2) by **olikraus** | BSD-2-Clause | OLED driver |
 | [AccelStepper](https://www.airspayce.com/mikem/arduino/AccelStepper/) by **Mike McCauley** | GPL-3.0 | Stepper motion profile |
-| [OneWire](https://github.com/PaulStoffregen/OneWire) by **Paul Stoffregen** | MIT | 1-Wire bus driver |
-| [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) by **Miles Burton** | MIT | DS18B20 temperature sensor |
+| [OneWireNg](https://github.com/pstolarz/OneWireNg) by **Piotr Stolarz** | BSD-2-Clause | 1-Wire with ESP32-optimised interrupt handling |
 
 ---
 
@@ -416,9 +417,10 @@ The firmware is built on top of:
 - **[ArduinoJson](https://arduinojson.org/)** by **Benoît Blanchon** and
   **[ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)** by
   the ESP32Async contributors — web API and async HTTP serving.
-- **[OneWire](https://github.com/PaulStoffregen/OneWire)** by **Paul Stoffregen**
-  and **[DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library)**
-  by **Miles Burton** — 1-Wire bus driver and DS18B20 temperature sensor library.
+- **[OneWireNg](https://github.com/pstolarz/OneWireNg)** by **Piotr Stolarz** —
+  1-Wire implementation with ESP32-optimised interrupt handling. Uses per-core
+  interrupt masking instead of the global `noInterrupts()` of standard bit-banging
+  libraries, which keeps the WiFi stack stable during temperature conversions.
 
 
 ---

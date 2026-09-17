@@ -21,26 +21,28 @@ void WiFiManager::begin() {
 }
 
 void WiFiManager::loop() {
+    if (_rebootAt != 0 && millis() >= _rebootAt) {
+        ESP.restart();
+    }
+
     uint32_t now = millis();
 
     switch (_state) {
         case State::CONNECTING:
-            if (now - _actionSince >= WIFI_CONNECT_TIMEOUT_MS) {
-                if (_reconnectAttempts == 0) {
-                    // First attempt failed – fall back to AP mode
+            if (_reconnectAttempts == 0) {
+                if (now - _actionSince >= WIFI_CONNECT_TIMEOUT_MS) {
                     LOG_WARN("WiFi initial connect timed out – starting AP for reconfiguration");
                     WiFi.disconnect(true);
                     _startAP();
-                } else {
-                    // Subsequent attempt failed – retry silently after interval
-                    LOG_WARN("WiFi reconnect timed out – will retry");
-                    _startStation();
                 }
+            } else if (now - _actionSince >= WIFI_RECONNECT_INTERVAL_MS) {
+                // Auto-reconnect did not restore the link – one explicit begin() kick.
+                LOG_WARN("WiFi auto-reconnect timed out – calling begin() again");
+                _startStation();
             }
             break;
 
         case State::CONNECTED:
-            // WiFi is up; periodic health check via event callback
             break;
 
         case State::AP_MODE:
@@ -54,10 +56,15 @@ void WiFiManager::loop() {
 // ── Private helpers ───────────────────────────────────────────────────────────
 
 void WiFiManager::_startStation() {
-    _state         = State::CONNECTING;
-    _actionSince   = millis();
+    _state       = State::CONNECTING;
+    _actionSince = millis();
 
     WiFi.mode(WIFI_STA);
+    // Disable modem sleep – many consumer APs disconnect ESP32 clients that
+    // sleep between beacons. Costs ~30 mA extra but massively improves link stability.
+    WiFi.setSleep(false);
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(false);
     WiFi.begin(_prefs.getWifiSsid().c_str(), _prefs.getWifiPass().c_str());
     LOG_INFO("Connecting to SSID '%s' … (attempt %d)",
              _prefs.getWifiSsid().c_str(), _reconnectAttempts + 1);
@@ -103,18 +110,46 @@ void WiFiManager::_onConnected() {
         _portal = nullptr;
     }
 
-    LOG_INFO("WiFi connected: IP=%s  SSID=%s  RSSI=%d dBm",
+    LOG_INFO("WiFi connected: IP=%s  SSID=%s  BSSID=%s  RSSI=%d dBm",
              WiFi.localIP().toString().c_str(),
              WiFi.SSID().c_str(),
+             WiFi.BSSIDstr().c_str(),
              (int)WiFi.RSSI());
 }
 
-void WiFiManager::_onDisconnected() {
+void WiFiManager::_onDisconnected(uint8_t reason) {
+    _lastDisconnectReason = reason;
+    LOG_WARN("WiFi disconnected (reason %u %s)", reason, _reasonName(reason));
+
     if (_state == State::CONNECTED) {
         _reconnectAttempts++;
-        LOG_WARN("WiFi disconnected (attempt %d) – reconnecting …", _reconnectAttempts);
-        _startStation();
+        _state       = State::CONNECTING;
+        _actionSince = millis();
+        // Do not call WiFi.begin() here. setAutoReconnect(true) already retries;
+        // a second begin() races the supplicant and makes the link look flaky.
     }
+}
+
+const char* WiFiManager::_reasonName(uint8_t reason) {
+    switch (reason) {
+        case 1:   return "UNSPECIFIED";
+        case 2:   return "AUTH_EXPIRE";
+        case 3:   return "AUTH_LEAVE";
+        case 4:   return "ASSOC_EXPIRE";
+        case 8:   return "ASSOC_LEAVE";
+        case 15:  return "4WAY_HANDSHAKE_TIMEOUT";
+        case 200: return "BEACON_TIMEOUT";
+        case 201: return "NO_AP_FOUND";
+        case 202: return "AUTH_FAIL";
+        case 203: return "ASSOC_FAIL";
+        case 204: return "HANDSHAKE_TIMEOUT";
+        case 205: return "CONNECTION_FAIL";
+        default:  return "OTHER";
+    }
+}
+
+const char* WiFiManager::getLastDisconnectReasonName() const {
+    return _reasonName(_lastDisconnectReason);
 }
 
 void WiFiManager::_wifiEventHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
@@ -124,7 +159,7 @@ void WiFiManager::_wifiEventHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
             _instance->_onConnected();
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-            _instance->_onDisconnected();
+            _instance->_onDisconnected(info.wifi_sta_disconnected.reason);
             break;
         default:
             break;
@@ -141,6 +176,11 @@ String WiFiManager::getIP() const {
 
 String WiFiManager::getSSID() const {
     if (_state == State::CONNECTED) return WiFi.SSID();
+    return _prefs.getWifiSsid();
+}
+
+String WiFiManager::getBSSID() const {
+    if (_state == State::CONNECTED) return WiFi.BSSIDstr();
     return "";
 }
 
@@ -152,4 +192,10 @@ int32_t WiFiManager::getRSSI() const {
 void WiFiManager::onCredentialsSaved() {
     delay(1500);
     ESP.restart();
+}
+
+void WiFiManager::clearCredentialsAndReboot() {
+    _prefs.clearWifiCredentials();
+    _rebootAt = millis() + 1500;
+    LOG_WARN("WiFi credentials cleared – rebooting into AP mode");
 }

@@ -1,0 +1,13 @@
+# ESP32 Focuser – custom partition table (4 MB flash)
+# Gives 1.8 MB for each OTA app partition and 256 KB for LittleFS.
+# Default table only gives 1.28 MB per OTA partition which is tight with
+# all the libraries this firmware uses.
+#
+# Name,   Type, SubType,  Offset,   Size,    Flags
+nvs,      data, nvs,      0x9000,   0x5000,
+otadata,  data, ota,      0xe000,   0x2000,
+app0,     app,  ota_0,    0x10000,  0x1C0000,
+app1,     app,  ota_1,    0x1D0000, 0x1C0000,
+spiffs,   data, spiffs,   0x390000, 0x40000,
+nvs_key,  data, nvs_keys, 0x3D0000, 0x1000,   encrypted
+coredump, data, coredump, 0x3F0000, 0x10000,

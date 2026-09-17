@@ -14,9 +14,9 @@ class CaptivePortal;
  * -------------
  *  INIT        → CONNECTING (credentials available)
  *              → AP_MODE    (no credentials)
- *  CONNECTING  → CONNECTED  (WiFi.status() == WL_CONNECTED within timeout)
- *              → AP_MODE    (timeout)
- *  CONNECTED   → CONNECTING (WiFi dropped, auto-reconnect after interval)
+ *  CONNECTING  → CONNECTED  (GOT_IP within timeout)
+ *              → AP_MODE    (first-boot timeout)
+ *  CONNECTED   → CONNECTING (link dropped; ESP32 auto-reconnect, no WiFi.begin())
  *  AP_MODE     → (stays until credentials saved + restart)
  *
  * After the captive portal saves credentials, the ESP32 restarts automatically.
@@ -40,24 +40,33 @@ public:
     State   getState()     const { return _state; }
     String  getIP()        const;
     String  getSSID()      const;
+    String  getBSSID()     const;
     int32_t getRSSI()      const;
+    uint8_t getLastDisconnectReason() const { return _lastDisconnectReason; }
+    const char* getLastDisconnectReasonName() const;
 
     // Called by CaptivePortal after credentials are saved
     void onCredentialsSaved();
 
+    // Wipe stored SSID/password and reboot into AP mode (deferred so HTTP can finish).
+    void clearCredentialsAndReboot();
+
 private:
     PreferencesManager& _prefs;
-    State    _state            = State::INIT;
-    uint32_t _actionSince      = 0;   // ms: when CONNECTING state started
-    int      _reconnectAttempts = 0;  // 0 = first connect attempt
+    State    _state             = State::INIT;
+    uint32_t _actionSince       = 0;   // ms: when CONNECTING state started
+    int      _reconnectAttempts = 0;   // 0 = first connect attempt this boot
+    uint32_t _rebootAt          = 0;   // millis() deadline, 0 = none
+    uint8_t  _lastDisconnectReason = 0;
 
     CaptivePortal* _portal = nullptr;
 
     void _startAP();
     void _startStation();
     void _onConnected();
-    void _onDisconnected();
+    void _onDisconnected(uint8_t reason);
 
+    static const char* _reasonName(uint8_t reason);
     static void _wifiEventHandler(WiFiEvent_t event, WiFiEventInfo_t info);
     static WiFiManager* _instance;  // for event callback
 };

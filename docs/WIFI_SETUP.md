@@ -31,18 +31,33 @@ After credentials are saved the ESP32 always tries to connect at boot.
 
 ## Changing WiFi Credentials
 
-**Option A – AP mode reset:**
-1. Hold the ZERO button while powering on (not yet implemented; use Option B).
+**Option A – Web UI (preferred):**
+1. Open `http://esp32-focuser.local/` (or the IP shown on the OLED).
+2. Open the **Network** tab.
+3. Press **Clear WiFi & reboot into setup**.
+4. Join `ESP32-Focuser-XXXX` (password `focuser1`) and open `http://192.168.4.1/`.
 
-**Option B – Web interface:**
-1. Navigate to `http://esp32-focuser.local/setup/v1/focuser/0/setup` (Alpaca setup page).
-2. Use the "Server" tab → reset or clear credentials.
+**Option B – USB erase** (also wipes all other settings):
+```
+pio run -t erase
+pio run -t upload
+pio run -t buildfs && pio run -t uploadfs
+```
 
-**Option C – Clear NVS via serial:**
-```
-pio run -t monitor
-(type reset command if implemented)
-```
+The Network tab also shows the **BSSID** (MAC of the access point you are
+actually associated with). On a Fritzbox mesh that tells you whether you
+landed on the box or a repeater — picking the same SSID twice in the portal
+does not lock the radio to one node. Pin the device in the Fritzbox Mesh
+settings, or use a 2.4 GHz SSID that is not extended to the repeater.
+
+---
+
+## Mesh / Fritzbox notes
+
+The firmware stores only SSID + password. The ESP32 will roam to whichever
+mesh node is louder. `WiFi.setSleep(false)` is set to reduce idle disconnects.
+If the link still drops, check the **Last disconnect** reason on the Network
+tab (Serial also logs `reason N NAME`).
 
 ---
 

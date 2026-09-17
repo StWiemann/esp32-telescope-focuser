@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include "util/Log.h"
+#include "util/LogBuffer.h"
 
 void WebServer::begin(AsyncWebServer* server,
                       FocuserController& focuser,
@@ -142,6 +143,22 @@ void WebServer::_registerRoutes(AsyncWebServer* server) {
                 req->send(200, "application/json", "{\"ok\":true}");
             });
     server->addHandler(configHandler);
+
+    // ── API: clear WiFi credentials and reboot into captive portal ─────────
+    server->on("/api/wifi/clear", HTTP_POST, [this](AsyncWebServerRequest* req) {
+        _wifi->clearCredentialsAndReboot();
+        req->send(200, "application/json",
+                  "{\"ok\":true,\"message\":\"Rebooting into AP mode\"}");
+    });
+
+    server->on("/api/log", HTTP_GET, [](AsyncWebServerRequest* req) {
+        req->send(200, "text/plain", logBufferSnapshot());
+    });
+
+    server->on("/api/log/clear", HTTP_POST, [](AsyncWebServerRequest* req) {
+        logBufferClear();
+        req->send(200, "application/json", "{\"ok\":true}");
+    });
 }
 
 String WebServer::_buildStatusJson() const {
@@ -162,10 +179,15 @@ String WebServer::_buildStatusJson() const {
     }
     doc["tempAvailable"] = _tempSensor->isAvailable();
 
-    doc["wifi"]["ok"]   = _wifi->isConnected();
-    doc["wifi"]["ssid"] = _wifi->getSSID();
-    doc["wifi"]["ip"]   = _wifi->getIP();
-    doc["wifi"]["rssi"] = _wifi->getRSSI();
+    doc["wifi"]["ok"]                   = _wifi->isConnected();
+    doc["wifi"]["ssid"]                 = _wifi->getSSID();
+    doc["wifi"]["bssid"]                = _wifi->getBSSID();
+    doc["wifi"]["ip"]                   = _wifi->getIP();
+    doc["wifi"]["rssi"]                 = _wifi->getRSSI();
+    doc["wifi"]["lastDisconnectReason"] = _wifi->getLastDisconnectReason();
+    doc["wifi"]["lastDisconnectName"]   = _wifi->getLastDisconnectReasonName();
+    doc["freeHeap"]  = ESP.getFreeHeap();
+    doc["logBytes"]  = logBufferUsed();
 
     String out;
     serializeJson(doc, out);
