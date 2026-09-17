@@ -8,6 +8,10 @@ The focuser is fully controllable from **N.I.N.A.** (Windows) and
 **KStars/Ekos** (Astroberry / Linux) via the ASCOM Alpaca protocol, or manually
 via three physical buttons and a small web dashboard.
 
+Disclaimer: I do enjoy the tinkering part quite a bit more than writing Firmware for ESP32s. 
+So, already a big thank you to everyone who spent so much time laying the foundations for this (mentions at the bottom).
+And please be aware tha this is more or less completely vibe-coded. 
+
 ---
 ## Upcoming
 
@@ -353,6 +357,8 @@ See [docs/CALIBRATION.md](docs/CALIBRATION.md).
 | [ArduinoJson](https://arduinojson.org/) by **Benoît Blanchon** | MIT | JSON serialisation |
 | [U8g2](https://github.com/olikraus/u8g2) by **olikraus** | BSD-2-Clause | OLED driver |
 | [AccelStepper](https://www.airspayce.com/mikem/arduino/AccelStepper/) by **Mike McCauley** | GPL-3.0 | Stepper motion profile |
+| [OneWire](https://github.com/PaulStoffregen/OneWire) by **Paul Stoffregen** | MIT | 1-Wire bus driver |
+| [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) by **Miles Burton** | MIT | DS18B20 temperature sensor |
 
 ---
 
@@ -395,7 +401,7 @@ esp32-focusser/
 ## Attribution & Credits
 
 This project was designed and vibe-coded by **StWiemann** for personal use
-with a Sky-Watcher P200/200P Newton telescope.
+with a Sky-Watcher P200/200P Newton telescope. But the heavy lifting was done by other people.
 
 The firmware is built on top of:
 
@@ -410,6 +416,9 @@ The firmware is built on top of:
 - **[ArduinoJson](https://arduinojson.org/)** by **Benoît Blanchon** and
   **[ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)** by
   the ESP32Async contributors — web API and async HTTP serving.
+- **[OneWire](https://github.com/PaulStoffregen/OneWire)** by **Paul Stoffregen**
+  and **[DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library)**
+  by **Miles Burton** — 1-Wire bus driver and DS18B20 temperature sensor library.
 
 
 ---
