@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 Focuser</title>
+<link rel="stylesheet" href="/www/style.css">
+</head>
+<body>
+<h1>&#9654; ESP32 Astro Focuser</h1>
+
+<div class="grid">
+
+  <!-- Status Card -->
+  <div class="card">
+    <h2>Status</h2>
+    <div class="pos-display" id="pos">----</div>
+    <div class="pos-target" id="tgt-line">Target: ----</div>
+    <div id="moving-badge" style="text-align:center;margin:.3rem 0;height:1.2em"></div>
+
+    <div style="margin-top:.75rem">
+      <div class="row"><span class="label">Zeroed</span><span class="value" id="zeroed">-</span></div>
+      <div class="row"><span class="label">Max Position</span><span class="value" id="maxPos">-</span></div>
+      <div class="row"><span class="label">Temperature</span><span class="value" id="temperature">-</span></div>
+      <div class="row"><span class="label">WiFi</span><span class="value" id="wifiStatus">-</span></div>
+      <div class="row"><span class="label">IP</span><span class="value" id="ip">-</span></div>
+      <div class="row"><span class="label">RSSI</span><span class="value" id="rssi">-</span></div>
+      <div class="row"><span class="label">Firmware</span><span class="value" id="fw">-</span></div>
+    </div>
+  </div>
+
+  <!-- Control Card -->
+  <div class="card">
+    <h2>Manual Control</h2>
+    <div class="ctrl-row">
+      <button id="btnLgLeft"  class="step-btn">&#8920;&#8920;&#8920;</button>
+      <button id="btnMdLeft"  class="step-btn">&#8920;&#8920;</button>
+      <button id="btnSmLeft"  class="step-btn">&#8920;</button>
+      <button class="danger"  onclick="halt()">&#9632; STOP</button>
+      <button id="btnSmRight" class="step-btn">&#8921;</button>
+      <button id="btnMdRight" class="step-btn">&#8921;&#8921;</button>
+      <button id="btnLgRight" class="step-btn">&#8921;&#8921;&#8921;</button>
+    </div>
+
+    <div style="margin-top:1rem">
+      <label for="moveTarget">Move to absolute position</label>
+      <div style="display:flex;gap:.5rem">
+        <input type="number" id="moveTarget" min="0" placeholder="steps" style="flex:1">
+        <button class="primary" onclick="moveTo()">Go</button>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem">
+      <label>Zero position</label>
+      <button onclick="doZero()" title="Hold physically all the way in, then zero">
+        Set Zero (current = 0)
+      </button>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+        Drive focuser fully inward first, then press Zero.
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Card -->
+  <div class="card" id="configCard">
+    <h2>Configuration <span id="configSaved" style="color:var(--ok);font-size:.8rem;display:none">&#10003; Saved</span></h2>
+    <label>Focuser name</label>
+    <input type="text" id="cfgName" placeholder="ESP32 Focuser">
+    <label>Max position (steps)</label>
+    <input type="number" id="cfgMaxPos" min="1">
+    <label>Backlash (steps, 0=off)</label>
+    <input type="number" id="cfgBacklash" min="0">
+    <label>Backlash approach (+1=outward, -1=inward)</label>
+    <input type="number" id="cfgBacklashDir" min="-1" max="1" step="2">
+
+    <div style="margin-top:.75rem;border-top:1px solid var(--border);padding-top:.75rem">
+      <div style="color:var(--muted);font-size:.8rem;margin-bottom:.4rem">
+        Step sizes — buttons update automatically when saved
+      </div>
+      <label>Small step – physical button &amp; <code>&lt;N&lt;</code> (steps)</label>
+      <input type="number" id="cfgManStep" min="1">
+      <label>Medium step – <code>&lt;&lt;N&lt;&lt;</code> (steps)</label>
+      <input type="number" id="cfgStepMd" min="1">
+      <label>Large step – <code>&lt;&lt;&lt;N&lt;&lt;&lt;</code> (steps)</label>
+      <input type="number" id="cfgStepLg" min="1">
+    </div>
+
+    <label>Manual speed (steps/s)</label>
+    <input type="number" id="cfgManSpeed" min="10" max="1000">
+    <label>Max motor speed (steps/s)</label>
+    <input type="number" id="cfgMaxSpeed" min="10" max="1000">
+    <label>Motor reversed</label>
+    <select id="cfgReversed">
+      <option value="false">No</option>
+      <option value="true">Yes</option>
+    </select>
+    <label>Steps / revolution (motor output shaft)</label>
+    <input type="number" id="cfgStepsRev" min="100">
+    <label>Motor pulley teeth</label>
+    <input type="number" id="cfgMotorTeeth" min="1">
+    <label>Focuser pulley teeth</label>
+    <input type="number" id="cfgFocTeeth" min="1">
+    <div id="ratioDisplay" style="color:var(--muted);font-size:.8rem;margin-top:.4rem"></div>
+    <button class="primary" style="margin-top:1rem;width:100%" onclick="saveConfig()">Save Configuration</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="/www/app.js"></script>
+</body>
+</html>

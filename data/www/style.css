@@ -1,0 +1,95 @@
+/* ESP32 Focuser Web UI – minimal dark theme */
+:root {
+  --bg:      #0d1117;
+  --surface: #161b22;
+  --border:  #30363d;
+  --accent:  #58a6ff;
+  --danger:  #f85149;
+  --warn:    #d29922;
+  --ok:      #3fb950;
+  --text:    #c9d1d9;
+  --muted:   #8b949e;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+h1 { font-size: 1.25rem; color: var(--accent); margin-bottom: 1rem }
+h2 { font-size: 1rem; color: var(--muted); margin-bottom: .75rem;
+     text-transform: uppercase; letter-spacing: .08em }
+
+.grid { display: grid; gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* Status rows */
+.row { display:flex; justify-content:space-between; padding:.25rem 0;
+       border-bottom:1px solid var(--border) }
+.row:last-child { border-bottom:none }
+.label { color:var(--muted) }
+.value { font-weight:600 }
+.ok    { color:var(--ok) }
+.warn  { color:var(--warn) }
+.err   { color:var(--danger) }
+
+/* Big position display */
+.pos-display {
+  text-align:center; font-size:2.5rem; font-weight:700;
+  color:var(--accent); letter-spacing:-.02em; margin:.5rem 0
+}
+.pos-target { text-align:center; color:var(--muted); font-size:.9rem }
+
+/* Buttons */
+button {
+  cursor:pointer; border:1px solid var(--border); border-radius:6px;
+  background:var(--surface); color:var(--text);
+  padding:.4rem .85rem; font-size:.9rem; transition:background .15s
+}
+button:hover { background:var(--border) }
+button.primary { background:var(--accent); color:#000; border-color:var(--accent) }
+button.primary:hover { opacity:.85 }
+button.danger  { background:var(--danger); color:#fff; border-color:var(--danger) }
+button.danger:hover  { opacity:.85 }
+
+.ctrl-row { display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0 }
+
+/* Form */
+label { display:block; color:var(--muted); font-size:.8rem; margin:.6rem 0 .2rem }
+input[type=text],input[type=number],input[type=password] {
+  width:100%; padding:.4rem .6rem; background:var(--bg); border:1px solid var(--border);
+  border-radius:6px; color:var(--text); font-size:.9rem
+}
+input:focus { outline:none; border-color:var(--accent) }
+
+.badge {
+  display:inline-block; padding:.1rem .45rem; border-radius:4px;
+  font-size:.75rem; font-weight:600
+}
+.badge-ok   { background:#21361e; color:var(--ok) }
+.badge-warn { background:#362b0e; color:var(--warn) }
+.badge-err  { background:#3d1212; color:var(--danger) }
+
+.moving-indicator { color:var(--warn); animation:pulse 1s infinite }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+#toast {
+  position:fixed; bottom:1rem; right:1rem;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; padding:.75rem 1rem; font-size:.85rem;
+  opacity:0; transition:opacity .3s; pointer-events:none
+}
+#toast.show { opacity:1 }

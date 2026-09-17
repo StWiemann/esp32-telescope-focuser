@@ -1,0 +1,11 @@
+# PlatformIO
+.pio/
+.vscode/
+*.orig
+
+# Sensitive – never commit WiFi credentials or secrets
+include/Secrets.h
+data/secrets.json
+
+# macOS
+.DS_Store
